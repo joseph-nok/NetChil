@@ -1,0 +1,6 @@
+{
+  "name": "WatchNexus",
+  "description": "A cloud-hosted virtual browser watch party platform for real-time video streaming, interactive WebSockets control, and synchronized video chat.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

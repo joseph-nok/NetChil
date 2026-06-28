@@ -1,0 +1,47 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: co-browsing-app
+  labels:
+    cloud.googleapis.com/location: us-central1
+spec:
+  template:
+    metadata:
+      annotations:
+        # Strategy: Keep CPU always allocated so Puppeteer capturing threads never freeze
+        run.googleapis.com/cpu-throttling: "false"
+        # Minimum active container to eliminate cold starts and immediate page drop
+        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/maxScale: "10"
+    spec:
+      # Max execution timeout (1 hour / 3600 seconds) for uninterrupted streaming
+      timeoutSeconds: 3600
+      # Concurrency cap to prevent memory exhaustion by scaling horizontally early
+      containerConcurrency: 15
+      containers:
+        - image: gcr.io/YOUR_PROJECT_ID/co-browsing-app:latest
+          resources:
+            limits:
+              # 4Gi Memory and 2 vCPUs for stable headless browser execution
+              memory: 4Gi
+              cpu: "2"
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: "production"
+          # Ingress liveness & startup probes targeting our new GET /health endpoint
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
